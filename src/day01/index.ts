@@ -22,12 +22,7 @@ const part2 = (rawInput: string) => {
 
 run({
   part1: {
-    tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
-    ],
+    tests: [],
     solution: part1,
   },
   part2: {
@@ -46,6 +41,7 @@ run({
       { input: 'sevenine', expected: 79 },
       { input: 'eighthree', expected: 83 },
       { input: 'nineight', expected: 98 },
+      { input: '1eightcrcjcbdthreebscfpvznqfrj6', expected: 16 },
     ],
     solution: part2,
   },
@@ -54,40 +50,26 @@ run({
 })
 
 const sumOfCalibrationValues = (array: string[]): number =>
-  array.reduce((total, item) => {
-    // Find all digits in the string
+  array.reduce((total, item): number => {
     const digits = getNumberAndTextDigits(item)
-    // console.log('digits', digits);
-
-    // Find the first digit (if any)
     const firstDigit = digits.length ? digits[0] : 0
-    // console.log('firstDigit', firstDigit)
-
-    // Find the last digit (if any)
     const lastDigit = firstDigit ? digits[digits.length - 1] : ''
-    // console.log('lastDigit', lastDigit)
-
-    // Combine two digits into a single two-digit calibration number
     const twoDigitNumber = Number(firstDigit + lastDigit)
-    console.log('twoDigitNumber', twoDigitNumber)
 
-    // Update the total
     return total + twoDigitNumber
   }, 0)
 
 function getNumberAndTextDigits(str: string): string[] {
-  console.log('str', str)
-
   // Find all digits and digits written as text (e.g. "one", "two", "three"...) in a string
-  const regex = /(\d|((?=one)|(?=two)|(?=three)|four|(?=five)|six|(?=seven)|(?=eight)|(?=nine)))/g
+  const regex = /(?=(\d|one|two|three|four|five|six|seven|eight|nine))/g
 
   // Find all matches
-  const matchesAsArray = str.match(regex) || []
-  console.log('matchesAsArray', matchesAsArray)
+  const matchesAsArray = [...str.matchAll(regex)]
 
   // Convert text digits to number digits
   const matchesAsStringDigits = matchesAsArray.map((match): string => {
-    switch (match) {
+    console.log('match', match)
+    switch (match[1]) {
       case 'one':
         return '1'
       case 'two':
@@ -107,7 +89,7 @@ function getNumberAndTextDigits(str: string): string[] {
       case 'nine':
         return '9'
       default:
-        return match
+        return match[1]
     }
   })
 
