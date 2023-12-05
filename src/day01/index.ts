@@ -39,6 +39,13 @@ run({
       { input: '4nineeightseven2', expected: 42 },
       { input: 'zoneight234', expected: 14 },
       { input: '7pqrstsixteen', expected: 76 },
+      { input: 'oneight', expected: 18 },
+      { input: 'twone', expected: 21 },
+      { input: 'threeight', expected: 38 },
+      { input: 'fiveight', expected: 58 },
+      { input: 'sevenine', expected: 79 },
+      { input: 'eighthree', expected: 83 },
+      { input: 'nineight', expected: 98 },
     ],
     solution: part2,
   },
@@ -72,10 +79,11 @@ function getNumberAndTextDigits(str: string): string[] {
   console.log('str', str)
 
   // Find all digits and digits written as text (e.g. "one", "two", "three"...) in a string
-  const regex = /(\d|(one|two|three|four|five|six|seven|eight|nine))/g
+  const regex = /(\d|((?=one)|(?=two)|(?=three)|four|(?=five)|six|(?=seven)|(?=eight)|(?=nine)))/g
 
   // Find all matches
   const matchesAsArray = str.match(regex) || []
+  console.log('matchesAsArray', matchesAsArray)
 
   // Convert text digits to number digits
   const matchesAsStringDigits = matchesAsArray.map((match): string => {
@@ -104,5 +112,5 @@ function getNumberAndTextDigits(str: string): string[] {
   })
 
   // Return an array of all matches
-  return matchesAsStringDigits
+  return matchesAsStringDigits.filter(Boolean)
 }
