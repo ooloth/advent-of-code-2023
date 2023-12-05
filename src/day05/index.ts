@@ -58,9 +58,9 @@ const getDestinationFromSource = (sourceValue: number, mapping: Mapping, input: 
   // Otherwise, transform the destination number based on the map rule
   const [destination, source] = mapLineInSeedRange!.split(' ')
   const transformation = Number(source) - Number(destination)
-  const soil = sourceValue - transformation
+  const destinationValue = sourceValue - transformation
 
-  return soil
+  return destinationValue
 }
 
 type GetMapArgs = {
@@ -84,14 +84,62 @@ const getMapLinesSortedBySourceDesc = ({ mapping, input }: GetMapArgs): string[]
 
 const part2 = (rawInput: string): number => {
   const input = parseInput(rawInput)
-  const lines = input.split('\n')
-  // console.log('lines', lines)
+  const seeds = getSeeds(input)
+  console.log('seeds', seeds)
 
-  const sum = lines.reduce((total, line): number => {
-    return total
+  const locationsFromSeeds = seeds.reduce((locations, seedAndRange): number[] => {
+    const seedRangeLocations: number[] = []
+
+    for (let i = 0; i < seedAndRange.range; i++) {
+      const location = getLocationFromSeed(seedAndRange.seed + i, input)
+      console.log('location', location)
+      seedRangeLocations.push(location)
+    }
+
+    console.log('seedRangeLocations', seedRangeLocations)
+    return [...locations, ...seedRangeLocations]
+
+    // return getLocationFromSeed(Number(seed), input)
+  }, [] as number[])
+  console.log('locationsFromSeeds', locationsFromSeeds)
+
+  const minLocationIndex = locationsFromSeeds.reduce((minIndex, location, index) => {
+    return location < locationsFromSeeds[minIndex] ? index : minIndex
   }, 0)
 
-  return sum
+  const minLocation = locationsFromSeeds[minLocationIndex]
+  console.log('minLocation', minLocation)
+
+  return minLocation
+}
+
+type SeedAndRange = {
+  seed: number
+  range: number
+}
+
+const getSeeds = (input: string): SeedAndRange[] => {
+  const seedsAndRanges = input.split('\n')[0].replace('seeds: ', '').split(' ')
+  const seeds: SeedAndRange[] = []
+
+  for (let i = 0; i < seedsAndRanges.length; i = i + 2) {
+    const seed = Number(seedsAndRanges[i])
+    const range = Number(seedsAndRanges[i + 1])
+    seeds.push({ seed, range })
+    // seeds.push(...getAllSeedsInRange(seed, range))
+  }
+
+  return seeds
+}
+
+const getAllSeedsInRange = (start: number, range: number): number[] => {
+  console.log('start', start)
+  console.log('range', range)
+  const seeds = []
+  for (let i = start; i < start + range; i++) {
+    seeds.push(i)
+  }
+  return seeds
 }
 
 run({
