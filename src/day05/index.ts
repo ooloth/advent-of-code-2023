@@ -90,9 +90,9 @@ const part2 = (rawInput: string): number => {
   const locationsFromSeeds = seeds.reduce((locations, seedAndRange): number[] => {
     const seedRangeLocations: number[] = []
 
-    for (let i = 0; i < seedAndRange.range; i++) {
+    for (let i = 0; i < seedAndRange.range; i = i + 100000) {
       const location = getLocationFromSeed(seedAndRange.seed + i, input)
-      console.log('location', location)
+      // console.log('location', location)
       seedRangeLocations.push(location)
     }
 
@@ -122,24 +122,41 @@ const getSeeds = (input: string): SeedAndRange[] => {
   const seedsAndRanges = input.split('\n')[0].replace('seeds: ', '').split(' ')
   const seeds: SeedAndRange[] = []
 
+  // sort relevant map lines by highest to lowest seed number
+  const mapLines = getMapLinesSortedBySourceDesc({ mapping: 'seed-to-soil', input })
+  const sourceValues = mapLines.map((line) => Number(line.split(' ')[1]))
+  console.log('sourceValues', sourceValues)
+
+  // find the first line with a range that includes the seed number
+  // const mapLineInSeedRange = mapLines.find((mapLine) => {
+  //   const [_, source, range] = mapLine.split(' ')
+  //   return source >= Number(source) && sourceValue <= Number(source) + Number(range)
+  // })
+
   for (let i = 0; i < seedsAndRanges.length; i = i + 2) {
     const seed = Number(seedsAndRanges[i])
     const range = Number(seedsAndRanges[i + 1])
     seeds.push({ seed, range })
-    // seeds.push(...getAllSeedsInRange(seed, range))
   }
+
+  const seedsDesc = seeds.sort((a, b) => b.seed - a.seed)
+  console.log('seedsDesc', seedsDesc)
 
   return seeds
 }
 
-const getAllSeedsInRange = (start: number, range: number): number[] => {
-  console.log('start', start)
-  console.log('range', range)
-  const seeds = []
-  for (let i = start; i < start + range; i++) {
-    seeds.push(i)
-  }
-  return seeds
+const getLocationFromSeed2 = (seed: number, input: string): number => {
+  const mappings: Mapping[] = [
+    'seed-to-soil',
+    'soil-to-fertilizer',
+    'fertilizer-to-water',
+    'water-to-light',
+    'light-to-temperature',
+    'temperature-to-humidity',
+    'humidity-to-location',
+  ]
+
+  return mappings.reduce((nextValue, mapping): number => getDestinationFromSource(nextValue, mapping, input), seed)
 }
 
 run({
