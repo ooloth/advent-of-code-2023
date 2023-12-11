@@ -85,23 +85,10 @@ const getMapLinesSortedBySourceDesc = ({ mapping, input }: GetMapArgs): string[]
 const part2 = (rawInput: string): number => {
   const input = parseInput(rawInput)
   const seeds = getSeeds(input)
-  console.log('seeds', seeds)
+  // console.log('seeds', seeds)
 
-  const locationsFromSeeds = seeds.reduce((locations, seedAndRange): number[] => {
-    const seedRangeLocations: number[] = []
-
-    for (let i = 0; i < seedAndRange.range; i = i + 100000) {
-      const location = getLocationFromSeed(seedAndRange.seed + i, input)
-      // console.log('location', location)
-      seedRangeLocations.push(location)
-    }
-
-    console.log('seedRangeLocations', seedRangeLocations)
-    return [...locations, ...seedRangeLocations]
-
-    // return getLocationFromSeed(Number(seed), input)
-  }, [] as number[])
-  console.log('locationsFromSeeds', locationsFromSeeds)
+  const locationsFromSeeds = seeds.map((seed) => getLocationFromSeed(seed, input))
+  // console.log('locationsFromSeeds', locationsFromSeeds)
 
   const minLocationIndex = locationsFromSeeds.reduce((minIndex, location, index) => {
     return location < locationsFromSeeds[minIndex] ? index : minIndex
@@ -114,35 +101,83 @@ const part2 = (rawInput: string): number => {
 }
 
 type SeedAndRange = {
-  seed: number
+  start: number
+  end: number
   range: number
 }
 
-const getSeeds = (input: string): SeedAndRange[] => {
+const getSeeds = (input: string): number[] => {
   const seedsAndRanges = input.split('\n')[0].replace('seeds: ', '').split(' ')
   const seeds: SeedAndRange[] = []
 
   // sort relevant map lines by highest to lowest seed number
   const mapLines = getMapLinesSortedBySourceDesc({ mapping: 'seed-to-soil', input })
-  const sourceValues = mapLines.map((line) => Number(line.split(' ')[1]))
-  console.log('sourceValues', sourceValues)
 
-  // find the first line with a range that includes the seed number
-  // const mapLineInSeedRange = mapLines.find((mapLine) => {
-  //   const [_, source, range] = mapLine.split(' ')
-  //   return source >= Number(source) && sourceValue <= Number(source) + Number(range)
-  // })
+  const seedMapRanges = mapLines.map((line) => {
+    const [destination, source, range] = line.split(' ')
+
+    return {
+      start: Number(source),
+      end: Number(source) + Number(range),
+      transformation: Number(destination) - Number(source),
+    }
+  })
+  console.log('seedMapRanges', seedMapRanges)
 
   for (let i = 0; i < seedsAndRanges.length; i = i + 2) {
     const seed = Number(seedsAndRanges[i])
     const range = Number(seedsAndRanges[i + 1])
-    seeds.push({ seed, range })
+    seeds.push({ start: seed, end: seed + range, range })
   }
 
-  const seedsDesc = seeds.sort((a, b) => b.seed - a.seed)
+  const seedsDesc = seeds.sort((a, b) => b.end - a.end)
   console.log('seedsDesc', seedsDesc)
 
-  return seeds
+  const relevantSeeds: number[] = seedsDesc.reduce((seeds, seedRange) => {
+    console.log('seedRange', seedRange)
+    // find the first line with a range that includes the seed number
+    const mapLineInSeedRange = mapLines.find((mapLine) => {
+      const [_, source, range] = mapLine.split(' ')
+      const isStartAboveCutoff = seedRange.start >= Number(source)
+      const isStartWithinRange = seedRange.start <= Number(source) + Number(range)
+      if (isStartAboveCutoff && isStartWithinRange) return true
+
+      const isEndAboveCutoff = seedRange.end >= Number(source)
+      const isEndWithinRange = seedRange.end <= Number(source) + Number(range)
+      if (isEndAboveCutoff && isEndWithinRange) return true
+
+      // return seedRange >= Number(source) && sourceValue <= Number(source) + Number(range)
+    })
+    console.log('mapLineInSeedRange', mapLineInSeedRange)
+
+    // If no map rule ranges capture the source number, the destination number is the same
+    if (!mapLineInSeedRange) {
+      return [...seeds, seedRange.start]
+    }
+
+    const [_, source, range] = mapLineInSeedRange.split(' ')
+    const isStartAboveCutoff = seedRange.start >= Number(source)
+    const isStartWithinRange = seedRange.start <= Number(source) + Number(range)
+    const isEndAboveCutoff = seedRange.end >= Number(source)
+    const isEndWithinRange = seedRange.end <= Number(source) + Number(range)
+
+    if (seedRange.start >= Number(source) && seedRange.end < Number(source)) {
+      return [...seeds, Number(source)]
+    }
+
+    if (seedRange.start >= Number(source)) {
+      return [...seeds, seedRange.start]
+    }
+
+    if (seedRange.end >= Number(source)) {
+      return [...seeds, seedRange.end]
+    }
+
+    return seeds
+  }, [] as number[])
+  console.log('relevantSeeds', relevantSeeds)
+
+  return relevantSeeds
 }
 
 const getLocationFromSeed2 = (seed: number, input: string): number => {
